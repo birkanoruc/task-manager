@@ -21,7 +21,15 @@ const taskSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform: function (doc, ret) {
+        delete ret.__v; // __v'yi JSON çıktısından çıkar
+        return ret;
+      },
+    },
+  }
 );
 
 module.exports = mongoose.model("Task", taskSchema);

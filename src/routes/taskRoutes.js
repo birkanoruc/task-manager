@@ -8,7 +8,6 @@ const {
   updateTaskSchema,
 } = require("../validations/taskValidation");
 
-const authorizeOwner = require("../middlewares/authorizeMiddleware");
 const Task = require("../models/Task");
 
 router.use(authMiddleware); // Tüm route'lara auth middleware'ini uygula
@@ -17,15 +16,10 @@ router.get("/", taskController.getTasks);
 
 router.post("/", validate(createTaskSchema), taskController.createTask);
 
-router.get("/:id", authorizeOwner(Task), taskController.getTaskById);
+router.get("/:id", taskController.getTaskById);
 
-router.patch(
-  "/:id",
-  authorizeOwner(Task),
-  validate(updateTaskSchema),
-  taskController.updateTask
-);
+router.patch("/:id", validate(updateTaskSchema), taskController.updateTask);
 
-router.delete("/:id", authorizeOwner(Task), taskController.deleteTask);
+router.delete("/:id", taskController.deleteTask);
 
 module.exports = router;

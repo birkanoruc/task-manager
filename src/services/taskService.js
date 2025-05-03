@@ -1,32 +1,44 @@
 const Task = require("../models/Task");
 const AppError = require("../utils/appError");
+const taskPolicy = require("../policies/taskPolicy");
 
-const getTasks = async (userId) => {
-  return Task.find({ user: userId }).sort({ createdAt: -1 });
+const getTasks = async (user) => {
+  return Task.find({ user: user._id }).sort({ createdAt: -1 });
 };
 
-const getTaskById = async (taskId, userId) => {
-  const task = await Task.findOne({ _id: taskId, user: userId });
+const getTaskById = async (taskId, user) => {
+  const task = await Task.findOne({ _id: taskId });
+
   if (!task) {
-    throw new AppError("Görev bulunamadı veya erişim izniniz yok", 404);
+    throw new AppError("Görev bulunamadı", 404);
   }
+
+  if (!taskPolicy.canView(user, task)) {
+    throw new AppError("Bu görevi görüntüleme izniniz yok", 403);
+  }
+
   return task;
 };
 
-const createTask = async (userId, data) => {
+const createTask = async (user, data) => {
   const task = new Task({
     title: data.title,
     description: data.description,
-    user: userId,
+    user: user._id,
   });
   await task.save();
   return task;
 };
 
-const updateTask = async (taskId, userId, data) => {
-  const task = await Task.findOne({ _id: taskId, user: userId });
+const updateTask = async (taskId, user, data) => {
+  const task = await Task.findOne({ _id: taskId });
+
   if (!task) {
-    throw new AppError("Görev bulunamadı veya erişim izniniz yok", 404);
+    throw new AppError("Görev bulunamadı", 404);
+  }
+
+  if (!taskPolicy.canEdit(user, task)) {
+    throw new AppError("Bu görevi güncelleme izniniz yok", 403);
   }
 
   Object.assign(task, data);
@@ -34,10 +46,15 @@ const updateTask = async (taskId, userId, data) => {
   return task;
 };
 
-const deleteTask = async (taskId, userId) => {
-  const task = await Task.findOneAndDelete({ _id: taskId, user: userId });
+const deleteTask = async (taskId, user) => {
+  const task = await Task.findOneAndDelete({ _id: taskId });
+
   if (!task) {
-    throw new Error("Görev bulunamadı veya erişim izniniz yok.");
+    throw new AppError("Görev bulunamadı", 404);
+  }
+
+  if (!taskPolicy.canDelete(user, task)) {
+    throw new AppError("Bu görevi silme izniniz yok", 403);
   }
   return task;
 };

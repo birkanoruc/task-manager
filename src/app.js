@@ -3,7 +3,6 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const errorHandler = require("./middlewares/errorMiddleware");
 const app = express();
@@ -21,9 +20,6 @@ app.get("/api/ping", (req, res) => {
 
 // Auth routes
 app.use("/api/auth", authRoutes);
-
-// User routes
-app.use("/api/user", userRoutes);
 
 // Task routes
 app.use("/api/tasks", taskRoutes);
