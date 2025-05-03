@@ -2,22 +2,28 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const AppError = require("../utils/appError");
 
-const generateToken = (user) => {
+const generateAccessToken = (user) => {
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
+    expiresIn: "15min",
   });
 };
 
-const register = async ({ data }) => {
+const generateRefreshToken = (user) => {
+  return jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: "30d",
+  });
+};
+
+const register = async (data) => {
   const existingUser = await User.findOne({ email: data.email });
   if (existingUser) {
-    throw new AppError("Bu e-posta zaten kullanılıyor.");
+    throw new AppError("Bu e-posta zaten kullanılıyor.", 400);
   }
-
   const user = await User.create(data);
-  const token = generateToken(user);
-
-  return { user, token };
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+  user.updateRefreshToken(refreshToken);
+  return { user, accessToken, refreshToken };
 };
 
 const login = async (data) => {
@@ -25,33 +31,32 @@ const login = async (data) => {
   if (!user || !(await user.comparePassword(data.password))) {
     throw new AppError("Geçersiz e-posta veya şifre", 401);
   }
-
-  const token = generateToken(user);
-  return { user, token };
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+  user.updateRefreshToken(refreshToken);
+  return { user, accessToken, refreshToken };
 };
 
-const logout = async (req, res) => {
-  res.status(200).json({ message: "Başarıyla çıkış yapıldı" }); // Frontend token'ı sildiği sürece logout olur.
+const logout = async (user) => {
+  user.updateRefreshToken();
+  return true;
 };
 
-const changePassword = async (userId, data) => {
-  const user = await User.findById(userId).select("+password");
-  if (!user || !(await user.comparePassword(data.oldPassword))) {
-    throw new AppError("Geçersiz eski şifre", 401);
+const changePassword = async (user, data) => {
+  if (!(await user.comparePassword(data.old_password))) {
+    throw new AppError("Geçersiz eski şifre", 400);
   }
-
-  user.password = data.newPassword;
-  await user.save();
-
+  user.updatePassword(data.new_password);
   return user;
 };
 
-const getUserById = async (userId) => {
-  const user = await User.findById(userId).select("-password");
-  if (!user) {
-    throw new AppError("Kullanıcı bulunamadı", 404);
-  }
+const me = async (user) => {
   return user;
 };
 
-module.exports = { register, login, logout };
+const refresh = async (user) => {
+  const accessToken = generateAccessToken(user);
+  return accessToken;
+};
+
+module.exports = { register, login, logout, changePassword, me, refresh };

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middlewares/authMiddleware");
+const authMiddleware = require("../middlewares/authMiddleware");
+const refreshTokenMiddleware = require("../middlewares/refreshTokenMiddleware");
 const authController = require("../controllers/authController");
 const validate = require("../middlewares/validateMiddleware");
 const {
@@ -13,15 +14,17 @@ router.post("/register", validate(registerSchema), authController.register);
 
 router.post("/login", validate(loginSchema), authController.login);
 
-router.post("/logout", auth, authController.logout);
+router.post("/logout", authMiddleware, authController.logout);
 
-router.get("/me", auth, authController.me);
+router.post("/me", authMiddleware, authController.me);
 
 router.patch(
   "/change-password",
-  auth,
+  authMiddleware,
   validate(changePasswordSchema),
   authController.changePassword
 );
+
+router.post("/refresh", refreshTokenMiddleware, authController.refreshToken);
 
 module.exports = router;

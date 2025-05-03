@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const AppError = require("../utils/appError");
 
-const auth = async (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -12,8 +12,8 @@ const auth = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Token'ı doğrula
-    const user = await User.findById(decoded.id).select("-password"); // Şifreyi dahil etme
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
 
     if (!user) {
       return next(new AppError("Kullanıcı bulunamadı", 404));
@@ -26,4 +26,4 @@ const auth = async (req, res, next) => {
   }
 };
 
-module.exports = auth;
+module.exports = authMiddleware;

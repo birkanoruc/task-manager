@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -10,14 +11,12 @@ require("dotenv").config();
 
 // Middlewares
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
-
-// Error handling middleware
-app.use(errorHandler);
 
 // Test route
 app.get("/api/ping", (req, res) => {
-  res.json({ message: "Pong!" });
+  res.json({ message: "Pong!" }, 200);
 });
 
 // Auth routes
@@ -28,6 +27,9 @@ app.use("/api/user", userRoutes);
 
 // Task routes
 app.use("/api/tasks", taskRoutes);
+
+// Error handling middleware
+app.use(errorHandler);
 
 // MongoDB'ye bağlan
 connectDB();

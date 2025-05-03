@@ -12,8 +12,14 @@ const loginSchema = Joi.object({
 });
 
 const changePasswordSchema = Joi.object({
-  oldPassword: Joi.string().required(),
-  newPassword: Joi.string().min(6).required(),
+  old_password: Joi.string().required(),
+  new_password: Joi.string().min(6).required(),
+  confirm_password: Joi.string()
+    .valid(Joi.ref("new_password"))
+    .required()
+    .messages({
+      "any.only": "Yeni şifreler eşleşmiyor",
+    }),
 }).required();
 
 module.exports = {

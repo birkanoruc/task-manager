@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const taskController = require("../controllers/taskController");
-const auth = require("../middlewares/authMiddleware");
+const authMiddleware = require("../middlewares/authMiddleware");
 const validate = require("../middlewares/validateMiddleware");
 const {
   createTaskSchema,
@@ -11,7 +11,7 @@ const {
 const authorizeOwner = require("../middlewares/authorizeMiddleware");
 const Task = require("../models/Task");
 
-router.use(auth); // Tüm route'lara auth middleware'ini uygula
+router.use(authMiddleware); // Tüm route'lara auth middleware'ini uygula
 
 router.get("/", taskController.getTasks);
 
